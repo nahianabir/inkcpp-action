@@ -46,13 +46,13 @@ jobs:
           mkdir -p addons/inkcpp/bin
           copy build/*.dll addons/inkcpp/bin/
           
-          # If the .gdextension file does not exist, create it
-          if (!(Test-Path "inkcpp/inkcpp.gdextension")) {
-            echo '[gd_resource type="GDExtension"]' > addons/inkcpp/inkcpp.gdextension
-            echo 'resource_name = "inkcpp"' >> addons/inkcpp/inkcpp.gdextension
-          } else {
-            copy inkcpp/inkcpp.gdextension addons/inkcpp/
-          }
+          # Create the inkcpp.gdextension file with correct format
+          echo "[configuration]" > addons/inkcpp/inkcpp.gdextension
+          echo "entry_symbol = \"inkcpp\"" >> addons/inkcpp/inkcpp.gdextension
+          echo "" >> addons/inkcpp/inkcpp.gdextension
+          echo "[libraries]" >> addons/inkcpp/inkcpp.gdextension
+          echo "windows.64 = \"res://addons/inkcpp/bin/inkcpp.dll\"" >> addons/inkcpp/inkcpp.gdextension
+
 
       - name: Upload Plugin Artifact
         uses: actions/upload-artifact@v4
