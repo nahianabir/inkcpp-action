@@ -48,6 +48,5 @@ jobs:
           name: inkcpp-plugin
           path: addons/inkcpp/
 
-          path: addons/inkcpp/
 
 
