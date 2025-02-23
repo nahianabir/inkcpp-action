@@ -23,25 +23,31 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          choco install python --version=3.9.0
-          python -m pip install scons
+          choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System'
+          choco install ninja
 
-      - name: Clone and Build inkcpp Extension
+      - name: Clone inkcpp Repository
+        run: git clone --recurse-submodules https://github.com/JBenda/inkcpp.git
+
+      - name: Configure and Build with CMake
         run: |
-          git clone --recurse-submodules https://github.com/JBenda/inkcpp.git
-          cd inkcpp
-          scons platform=windows target=release -j4
+          mkdir build
+          cd build
+          cmake ../inkcpp -G "Ninja" -DCMAKE_BUILD_TYPE=Release
+          cmake --build .
 
       - name: Prepare Plugin Directory
         run: |
           mkdir -p addons/inkcpp/bin
-          copy inkcpp/bin/*.dll addons/inkcpp/bin/
+          copy build/*.dll addons/inkcpp/bin/
           copy inkcpp/inkcpp.gdextension addons/inkcpp/
 
       - name: Upload Plugin Artifact
         uses: actions/upload-artifact@v4
         with:
           name: inkcpp-plugin
+          path: addons/inkcpp/
+
           path: addons/inkcpp/
 
 
