@@ -36,17 +36,30 @@ jobs:
           cmake ../inkcpp -G "Ninja" -DCMAKE_BUILD_TYPE=Release
           cmake --build .
 
+      - name: Check Build Output
+        run: |
+          echo "Checking contents of the build directory..."
+          Get-ChildItem -Recurse build/
+
       - name: Prepare Plugin Directory
         run: |
           mkdir -p addons/inkcpp/bin
           copy build/*.dll addons/inkcpp/bin/
-          copy inkcpp/inkcpp.gdextension addons/inkcpp/
+          
+          # If the .gdextension file does not exist, create it
+          if (!(Test-Path "inkcpp/inkcpp.gdextension")) {
+            echo '[gd_resource type="GDExtension"]' > addons/inkcpp/inkcpp.gdextension
+            echo 'resource_name = "inkcpp"' >> addons/inkcpp/inkcpp.gdextension
+          } else {
+            copy inkcpp/inkcpp.gdextension addons/inkcpp/
+          }
 
       - name: Upload Plugin Artifact
         uses: actions/upload-artifact@v4
         with:
           name: inkcpp-plugin
           path: addons/inkcpp/
+
 
 
 
