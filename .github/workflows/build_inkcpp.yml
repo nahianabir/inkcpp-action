@@ -1,4 +1,4 @@
-name: Build and Publish inkcpp for Godot 4.3
+name: Build and Package Inkcpp Plugin for Godot 4.3
 
 on:
   push:
@@ -26,7 +26,7 @@ jobs:
           choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System'
           choco install ninja
 
-      - name: Clone inkcpp Repository
+      - name: Clone Inkcpp Repository
         run: git clone --recurse-submodules https://github.com/JBenda/inkcpp.git
 
       - name: Configure and Build with CMake
@@ -44,15 +44,36 @@ jobs:
       - name: Prepare Plugin Directory
         run: |
           mkdir -p addons/inkcpp/bin
-          copy build/*.dll addons/inkcpp/bin/
+          mkdir -p addons/inkcpp/scripts
           
-          # Create the inkcpp.gdextension file with correct format
-          echo "[configuration]" > addons/inkcpp/inkcpp.gdextension
-          echo "entry_symbol = \"inkcpp\"" >> addons/inkcpp/inkcpp.gdextension
-          echo "" >> addons/inkcpp/inkcpp.gdextension
-          echo "[libraries]" >> addons/inkcpp/inkcpp.gdextension
-          echo "windows.64 = \"res://addons/inkcpp/bin/inkcpp.dll\"" >> addons/inkcpp/inkcpp.gdextension
+          # Copy compiled files (if any)
+          if (Test-Path "build/*.dll") {
+            copy build/*.dll addons/inkcpp/bin/
+          }
 
+          # Copy Inkcpp GDExtension files
+          if (!(Test-Path "addons/inkcpp/inkcpp.gdextension")) {
+            echo "[configuration]" > addons/inkcpp/inkcpp.gdextension
+            echo "entry_symbol = \"inkcpp\"" >> addons/inkcpp/inkcpp.gdextension
+            echo "" >> addons/inkcpp/inkcpp.gdextension
+            echo "[libraries]" >> addons/inkcpp/inkcpp.gdextension
+            echo "windows.64 = \"res://addons/inkcpp/bin/inkcpp.dll\"" >> addons/inkcpp/inkcpp.gdextension
+          }
+
+          # Create a Godot plugin.cfg file
+          echo "[plugin]" > addons/inkcpp/plugin.cfg
+          echo "name=\"Inkcpp\"" >> addons/inkcpp/plugin.cfg
+          echo "description=\"Ink Runtime Plugin for Godot\"" >> addons/inkcpp/plugin.cfg
+          echo "author=\"YourName\"" >> addons/inkcpp/plugin.cfg
+          echo "version=\"1.0\"" >> addons/inkcpp/plugin.cfg
+          echo "script=\"res://addons/inkcpp/plugin.gd\"" >> addons/inkcpp/plugin.cfg
+
+          # Create a basic plugin.gd script (modify if needed)
+          echo "extends EditorPlugin" > addons/inkcpp/plugin.gd
+          echo "func _enter_tree():" >> addons/inkcpp/plugin.gd
+          echo "    print(\"Inkcpp Plugin Loaded\")" >> addons/inkcpp/plugin.gd
+          echo "func _exit_tree():" >> addons/inkcpp/plugin.gd
+          echo "    print(\"Inkcpp Plugin Unloaded\")" >> addons/inkcpp/plugin.gd
 
       - name: Upload Plugin Artifact
         uses: actions/upload-artifact@v4
