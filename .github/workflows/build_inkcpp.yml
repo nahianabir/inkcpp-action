@@ -1,0 +1,47 @@
+name: Build and Publish inkcpp for Godot 4.3
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set Up MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - name: Install Dependencies
+        run: |
+          choco install python --version=3.9.0
+          python -m pip install scons
+
+      - name: Clone and Build inkcpp Extension
+        run: |
+          git clone --recurse-submodules https://github.com/JBenda/inkcpp.git
+          cd inkcpp
+          scons platform=windows target=release -j4
+
+      - name: Prepare Plugin Directory
+        run: |
+          mkdir -p addons/inkcpp/bin
+          copy inkcpp/bin/*.dll addons/inkcpp/bin/
+          copy inkcpp/inkcpp.gdextension addons/inkcpp/
+
+      - name: Upload Plugin Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: inkcpp-plugin
+          path: addons/inkcpp/
+
+
